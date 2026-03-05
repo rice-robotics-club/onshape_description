@@ -21,20 +21,36 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
-      - run: pip install onshape-to-robot
+      - run: pip install onshape-to-robot==1.7.9
       - name: Update URDF and meshes
         env:
           ONSHAPE_API: ${{ vars.ONSHAPE_API }}
           ONSHAPE_ACCESS_KEY: ${{ secrets.ONSHAPE_ACCESS_KEY }}
           ONSHAPE_SECRET_KEY: ${{ secrets.ONSHAPE_SECRET_KEY }}
         run: onshape-to-robot .
+      - uses: RadovanPelka/github-action-json@main
+        with: 
+          path: config.json
+          replaceWith: |
+            {
+              "output_format": "mujoco"
+            }
+      - run: onshape-to-robot .
+        env:
+          ONSHAPE_API: ${{ vars.ONSHAPE_API }}
+          ONSHAPE_ACCESS_KEY: ${{ secrets.ONSHAPE_ACCESS_KEY }}
+          ONSHAPE_SECRET_KEY: ${{ secrets.ONSHAPE_SECRET_KEY }}
+      - run: |
+          mv -f robot.xml mjcf/robot.xml
+          mv -f robot.urdf urdf/robot.urdf
+          rm scene.xml
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
       - name: Commit changes
         run: |
-          git add .
+          git add mjcf/robot.xml urdf/robot.urdf
           git commit -m "Automated update by GitHub Action"
       - name: Push changes
         run: git push origin HEAD:${{ github.ref }}
