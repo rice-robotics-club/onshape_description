@@ -1,6 +1,6 @@
 {
   "robot_name": "robot", # TODO: replace with robot name
-  "package_name": "onshape_description_template", # TODO: replace with package name
+  "package_name": "onshape_description", # TODO: replace with package name
   "assets_directory": "meshes",
   "output_filename": "robot",
   "output_format": "urdf",
