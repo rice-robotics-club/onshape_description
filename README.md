@@ -1,4 +1,4 @@
-# onshape_description_template
+# onshape_description
 
 This repository contains a template for a ROS2 robot description package. By convention, ROS2 packages
 that exist solely to house a robot's URDF files and CAD meshes are usually titled "[robot name]_description".
@@ -38,7 +38,7 @@ that may be used, such as for handling kinematic loops.
 
 A joint name array constant is included asa python package, which can be imported via:
 ```Python
-from onshape_description_template import JOINT_NAMES
+from onshape_description import JOINT_NAMES
 ```
 
 ## Usage
@@ -50,7 +50,7 @@ In order to extend from this template repository, the package name, robot name, 
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>onshape_description_template</name> <!-- TODO: replace with package name -->
+  <name>onshape_description</name> <!-- TODO: replace with package name -->
   <version>1.0.0</version>
   
 ...
@@ -69,7 +69,7 @@ project(onshape_description_template) # TODO: replace with package name
 ```json
 {
   "robot_name": "robot", # TODO: replace with robot name
-  "package_name": "onshape_description_template", # TODO: replace with package name
+  "package_name": "onshape_description", # TODO: replace with package name
   "assets_directory": "meshes",
   "output_filename": "urdf/robot",
   "output_format": "urdf",
@@ -85,16 +85,16 @@ project(onshape_description_template) # TODO: replace with package name
 ...
 
 def generate_launch_description():
-    description_path = get_package_share_path("onshape_description_template") # TODO: replace with package name
+    description_path = get_package_share_path("onshape_description") # TODO: replace with package name
 
     robot_description_content = Command(["cat ", str(description_path / "urdf" / "robot.urdf")])
 
 ...
 ```
 
-5. Rename `onshape_description_template/` to the new package name.
+5. Rename `onshape_description/` to the new package name.
 
-6. In `onshape_description_template/__init__.py`, specify the URDF's joint names:
+6. In `onshape_description/__init__.py`, specify the URDF's joint names:
 
 ```python
 JOINT_NAMES = [
