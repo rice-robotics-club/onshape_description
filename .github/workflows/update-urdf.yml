@@ -6,6 +6,12 @@ name: Update URDF
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+    inputs:
+      add_mjcf:
+        description: 'Produce a MJCF description'
+        default: true
+        required: false
+        type: boolean
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -28,6 +34,7 @@ jobs:
           ONSHAPE_ACCESS_KEY: ${{ secrets.ONSHAPE_ACCESS_KEY }}
           ONSHAPE_SECRET_KEY: ${{ secrets.ONSHAPE_SECRET_KEY }}
         run: onshape-to-robot .
+      - run: mv -f robot.urdf urdf/robot.urdf
       - uses: RadovanPelka/github-action-json@main
         with: 
           path: config.json
@@ -35,22 +42,26 @@ jobs:
             {
               "output_format": "mujoco"
             }
+        if: ${{ inputs.add_mjcf }}
       - run: onshape-to-robot .
         env:
           ONSHAPE_API: ${{ vars.ONSHAPE_API }}
           ONSHAPE_ACCESS_KEY: ${{ secrets.ONSHAPE_ACCESS_KEY }}
           ONSHAPE_SECRET_KEY: ${{ secrets.ONSHAPE_SECRET_KEY }}
+        if: ${{ inputs.add_mjcf }}
       - run: |
           mv -f robot.xml mjcf/robot.xml
-          mv -f robot.urdf urdf/robot.urdf
           rm scene.xml
+        if: ${{ inputs.add_mjcf }}
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+      - run: git add mjcf/robot.xml
+        if: ${{ inputs.add_mjcf }}
       - name: Commit changes
         run: |
-          git add mjcf/robot.xml urdf/robot.urdf meshes/*
+          git add urdf/robot.urdf meshes/*
           git commit -m "Automated update by GitHub Action"
       - name: Push changes
         run: git push origin HEAD:${{ github.ref }}
