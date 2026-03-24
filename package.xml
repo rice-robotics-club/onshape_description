@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>onshape_description_template</name> <!-- TODO: replace with package name -->
+  <name>onshape_description</name>
   <version>1.0.0</version>
   <description>
   	A ROS2 package template for a robot_description package.
