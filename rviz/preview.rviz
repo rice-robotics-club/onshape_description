@@ -67,51 +67,6 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        chassisasm:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        hipasm:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        hipasm_2:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        hipasm_3:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        hipasm_4:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        legasm:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        legasm2:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        legasmflipped:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        legasmflipped2:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
       Mass Properties:
         Inertia: false
         Mass: false
@@ -123,7 +78,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: chassisasm
+    Fixed Frame: base_link
     Frame Rate: 30
   Name: root
   Tools:
