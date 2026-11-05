@@ -14,7 +14,8 @@ This template includes the following features:
 2. Previewing the robot with rviz2.
 3. Loading in the urdf file from an Onshape assembly via [onshape-to-robot](https://onshape-to-robot.readthedocs.io/en/latest/index.html).
 4. Generating a reusable xacro macro (with a `tf_prefix` and `parent` link) from that URDF.
-5. Specifying a joint name array as a python package.
+5. Automatically updating the package when a new version of the Onshape document is created (webhook).
+6. Specifying a joint name array as a python package.
 
 ### rviz2
 
@@ -76,6 +77,18 @@ To use the robot in another description (for example, two copies in one scene):
 (Replace `xacro:robot` with `xacro:<robot_name>`.) Don't edit the generated xacro files by hand; they are
 overwritten on every export (which also checks that they expand with `xacro` and pass `check_urdf`).
 To regenerate them locally, run `python3 scripts/urdf_to_xacro.py`.
+
+### Onshape webhook
+
+Creating a **version** of the Onshape document can run Update URDF automatically: the export uses that
+exact version, and the resulting commit (`Update from Onshape version <name>`) is tagged `onshape-<name>`,
+so CAD versions and Git tags line up. To enable it for a robot repository, fill in `config.json` and run
+**Actions → Register Onshape Webhook** once.
+
+This relies on the club's webhook relay, [onshape_webhook](https://github.com/rice-robotics-club/onshape_webhook)
+(a Cloudflare Worker deployed once by club admins; see its README for setup), and on the
+`ONSHAPE_WEBHOOK_RELAY_URL` organization variable. Webhook-triggered runs don't export MJCF; run Update URDF
+manually for that.
 
 ### Python Joint Names
 

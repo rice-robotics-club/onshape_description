@@ -1,0 +1,25 @@
+name: Register Onshape Webhook
+
+# Run once per robot repository (after filling in config.json) so that creating a version of the
+# Onshape document automatically runs Update URDF. See "Onshape webhook" in the README.
+on:
+  workflow_dispatch:
+
+jobs:
+  register:
+    runs-on: ubuntu-latest
+    if: ${{ !github.event.repository.is_template }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: pip install commentjson
+      - name: Register webhook
+        run: python scripts/register_onshape_webhook.py
+        env:
+          ONSHAPE_API: ${{ vars.ONSHAPE_API }}
+          ONSHAPE_ACCESS_KEY: ${{ secrets.ONSHAPE_ACCESS_KEY }}
+          ONSHAPE_SECRET_KEY: ${{ secrets.ONSHAPE_SECRET_KEY }}
+          RELAY_URL: ${{ vars.ONSHAPE_WEBHOOK_RELAY_URL }}
+          REPOSITORY_NAME: ${{ github.event.repository.name }}
