@@ -6,7 +6,11 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 ament_python_install_package(${PROJECT_NAME})
 
-install(DIRECTORY meshes urdf rviz launch DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY urdf rviz launch DESTINATION share/${PROJECT_NAME})
+# meshes/ only exists after the first Update URDF run
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/meshes)
+  install(DIRECTORY meshes DESTINATION share/${PROJECT_NAME})
+endif()
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

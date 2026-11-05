@@ -1,8 +1,5 @@
-# This is a basic workflow to help you get started with Actions
-
 name: Update URDF
 
-# Controls when the workflow will run
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -13,55 +10,60 @@ on:
         required: false
         type: boolean
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   export:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    env:
+      ONSHAPE_API: ${{ vars.ONSHAPE_API }}
+      ONSHAPE_ACCESS_KEY: ${{ secrets.ONSHAPE_ACCESS_KEY }}
+      ONSHAPE_SECRET_KEY: ${{ secrets.ONSHAPE_SECRET_KEY }}
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
-      - run: pip install onshape-to-robot==1.7.9
-      - name: Update URDF and meshes
-        env:
-          ONSHAPE_API: ${{ vars.ONSHAPE_API }}
-          ONSHAPE_ACCESS_KEY: ${{ secrets.ONSHAPE_ACCESS_KEY }}
-          ONSHAPE_SECRET_KEY: ${{ secrets.ONSHAPE_SECRET_KEY }}
-        run: onshape-to-robot .
+      - run: pip install onshape-to-robot==1.8.3 xacro
+      - run: sudo apt-get update && sudo apt-get install -y liburdfdom-tools
+
+      # Fetch the assembly from Onshape once; robot.pkl lets the MJCF export below reuse it.
+      - name: Export URDF and meshes
+        run: onshape-to-robot --save-pickle .
       - run: mv -f robot.urdf urdf/robot.urdf
-      - uses: RadovanPelka/github-action-json@main
-        with: 
-          path: config.json
-          replaceWith: |
-            {
-              "output_format": "mujoco"
-            }
+
+      - name: Generate xacro macro and top-level description
+        run: python scripts/urdf_to_xacro.py urdf/robot.urdf
+
+      - name: Export MJCF (from the already-downloaded robot)
+        run: |
+          # config.json may contain comments, so edit it with commentjson (an onshape-to-robot dependency)
+          python -c "import commentjson, json; c = commentjson.load(open('config.json')); c['output_format'] = 'mujoco'; json.dump(c, open('config.json', 'w'), indent=2)"
+          onshape-to-robot --convert .
+          mkdir -p mjcf
+          # meshdir is relative to the model file, which now lives one level down
+          sed 's|meshdir="meshes"|meshdir="../meshes"|' robot.xml > mjcf/robot.xml
+          rm -f robot.xml
+          rm -f scene.xml
+          git checkout -- config.json
         if: ${{ inputs.add_mjcf }}
-      - run: onshape-to-robot .
-        env:
-          ONSHAPE_API: ${{ vars.ONSHAPE_API }}
-          ONSHAPE_ACCESS_KEY: ${{ secrets.ONSHAPE_ACCESS_KEY }}
-          ONSHAPE_SECRET_KEY: ${{ secrets.ONSHAPE_SECRET_KEY }}
-        if: ${{ inputs.add_mjcf }}
-      - run: |
-          mv -f robot.xml mjcf/robot.xml
-          rm scene.xml
-        if: ${{ inputs.add_mjcf }}
-      - name: Configure Git
+      - run: rm -f robot.pkl
+
+      - name: Validate description
+        run: |
+          for prefix in "" "r1_"; do
+            xacro urdf/robot.urdf.xacro tf_prefix:="$prefix" > /tmp/robot_$prefix.urdf
+            check_urdf /tmp/robot_$prefix.urdf
+          done
+
+      - name: Commit changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-      - run: git add mjcf/robot.xml
-        if: ${{ inputs.add_mjcf }}
-      - name: Commit changes
-        run: |
-          git add urdf/robot.urdf meshes/*
-          git commit -m "Automated update by GitHub Action"
-      - name: Push changes
-        run: git push origin HEAD:${{ github.ref }}
+          git add urdf meshes
+          if [ "${{ inputs.add_mjcf }}" = "true" ]; then git add mjcf; fi
+          if git diff --cached --quiet; then
+            echo "Description is already up to date; nothing to commit."
+          else
+            git commit -m "Automated update by GitHub Action"
+            git push origin HEAD:${{ github.ref }}
+          fi
