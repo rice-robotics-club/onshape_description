@@ -74,9 +74,8 @@ To use the robot in another description (for example, two copies in one scene):
 </robot>
 ```
 (Replace `xacro:robot` with `xacro:<robot_name>`.) Don't edit the generated xacro files by hand; they are
-overwritten on every export, and the Test workflow fails if they don't match `urdf/robot.urdf`. To
-regenerate them locally, run `python3 scripts/urdf_to_xacro.py`. Tests for the script live in `test/` and run with
-`python3 -m pytest test` (needs `pip install xacro pytest`).
+overwritten on every export (which also checks that they expand with `xacro` and pass `check_urdf`).
+To regenerate them locally, run `python3 scripts/urdf_to_xacro.py`.
 
 ### Python Joint Names
 

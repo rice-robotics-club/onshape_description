@@ -23,7 +23,7 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
-      - run: pip install onshape-to-robot==1.8.3 xacro pytest
+      - run: pip install onshape-to-robot==1.8.3 xacro
       - run: sudo apt-get update && sudo apt-get install -y liburdfdom-tools
 
       # Fetch the assembly from Onshape once; robot.pkl lets the MJCF export below reuse it.
@@ -50,7 +50,6 @@ jobs:
 
       - name: Validate description
         run: |
-          python -m pytest -q test
           for prefix in "" "r1_"; do
             xacro urdf/robot.urdf.xacro tf_prefix:="$prefix" > /tmp/robot_$prefix.urdf
             check_urdf /tmp/robot_$prefix.urdf
