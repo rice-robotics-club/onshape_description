@@ -9,6 +9,17 @@ on:
         default: false
         required: false
         type: boolean
+  # Sent by the Onshape webhook relay (rice-robotics-club/onshape_webhook) when a new version of the document is created
+  repository_dispatch:
+    types: [onshape-version]
+
+permissions:
+  contents: write
+
+# Never run two exports at once (e.g. two Onshape versions created in quick succession)
+concurrency:
+  group: update-urdf
+  cancel-in-progress: false
 
 jobs:
   export:
@@ -19,12 +30,22 @@ jobs:
       ONSHAPE_SECRET_KEY: ${{ secrets.ONSHAPE_SECRET_KEY }}
 
     steps:
+      # Check out the branch head (not the triggering commit) so a queued run sees earlier runs' pushes
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
       - run: pip install onshape-to-robot==1.8.3 xacro
       - run: sudo apt-get update && sudo apt-get install -y liburdfdom-tools
+
+      - name: Pin the Onshape version from the webhook
+        id: version
+        if: github.event_name == 'repository_dispatch'
+        env:
+          PAYLOAD: ${{ toJSON(github.event.client_payload) }}
+        run: python scripts/pin_onshape_version.py
 
       # Fetch the assembly from Onshape once; robot.pkl lets the MJCF export below reuse it.
       - name: Export URDF and meshes
@@ -64,6 +85,18 @@ jobs:
           if git diff --cached --quiet; then
             echo "Description is already up to date; nothing to commit."
           else
-            git commit -m "Automated update by GitHub Action"
+            git commit -m "${COMMIT_MESSAGE:-Automated update by GitHub Action}"
             git push origin HEAD:${{ github.ref }}
           fi
+          # Tag the commit matching this Onshape version (also when the version changed nothing here)
+          if [ -n "$TAG" ]; then
+            if git ls-remote --exit-code --tags origin "refs/tags/$TAG" > /dev/null; then
+              echo "Tag $TAG already exists; not moving it."
+            else
+              git tag -a "$TAG" -m "$COMMIT_MESSAGE"
+              git push origin "refs/tags/$TAG"
+            fi
+          fi
+        env:
+          COMMIT_MESSAGE: ${{ steps.version.outputs.commit_message }}
+          TAG: ${{ steps.version.outputs.tag }}
