@@ -1,0 +1,119 @@
+<?xml version="1.0" ?>
+<!-- Synthetic fixture mimicking onshape-to-robot 1.8.3 URDF output (with add_dummy_base_link,
+     a frame, a mimic joint, materials and package:// meshes). Used by test/test_urdf_to_xacro.py. -->
+<robot name="sample">
+  <!-- Link base_link -->
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1e-09"/>
+      <inertia ixx="1e-09" ixy="0" ixz="0" iyy="1e-09" iyz="0" izz="1e-09"/>
+    </inertial>
+  </link>
+  <!-- Link chassis -->
+  <link name="chassis">
+    <inertial>
+      <origin xyz="0 0 0.05" rpy="0 0 0"/>
+      <mass value="2.5"/>
+      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.02"/>
+    </inertial>
+    <!-- Part chassis -->
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://onshape_description/meshes/chassis.stl"/>
+      </geometry>
+      <material name="chassis_material">
+        <color rgba="0.6 0.6 0.6 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://onshape_description/meshes/chassis.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Frame camera (dummy link + fixed joint) -->
+  <link name="camera">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1e-9"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <joint name="camera_frame" type="fixed">
+    <origin xyz="0.1 0 0.1" rpy="0 0 0"/>
+    <parent link="chassis"/>
+    <child link="camera"/>
+    <axis xyz="0 0 0"/>
+  </joint>
+  <!-- Link finger_left -->
+  <link name="finger_left">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+    </inertial>
+    <!-- Part finger -->
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.02 0.05"/>
+      </geometry>
+      <material name="finger_material">
+        <color rgba="0.2 0.2 0.8 1"/>
+      </material>
+    </visual>
+  </link>
+  <!-- Joint from chassis to finger_left -->
+  <joint name="finger_left" type="prismatic">
+    <origin xyz="0 0.02 0.1" rpy="0 0 0"/>
+    <parent link="chassis"/>
+    <child link="finger_left"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="20" velocity="0.5" lower="0" upper="0.04"/>
+  </joint>
+  <!-- Link finger_right -->
+  <link name="finger_right">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+    </inertial>
+    <!-- Part finger_2 -->
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.02 0.05"/>
+      </geometry>
+      <material name="finger_material">
+        <color rgba="0.2 0.2 0.8 1"/>
+      </material>
+    </visual>
+  </link>
+  <!-- Joint from chassis to finger_right -->
+  <joint name="finger_right" type="prismatic">
+    <origin xyz="0 -0.02 0.1" rpy="0 0 0"/>
+    <parent link="chassis"/>
+    <child link="finger_right"/>
+    <axis xyz="0 -1 0"/>
+    <limit effort="20" velocity="0.5" lower="0" upper="0.04"/>
+    <mimic joint="finger_left" multiplier="1"/>
+  </joint>
+  <!-- Joint from base_link to chassis -->
+  <joint name="base_link_to_chassis" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="chassis"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+  <!-- Additional additional.xml -->
+  <gazebo reference="chassis">
+    <mu1>0.8</mu1>
+  </gazebo>
+  <gazebo reference="base_link">
+    <plugin name="literal_dollars">echo $(HOME) ${x}</plugin>
+  </gazebo>
+</robot>

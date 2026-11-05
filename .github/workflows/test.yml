@@ -1,0 +1,37 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: pip install xacro pytest
+      - run: sudo apt-get update && sudo apt-get install -y liburdfdom-tools
+
+      - name: Test urdf_to_xacro.py
+        run: python -m pytest -q test
+
+      # Skipped until the first Update URDF run fills in urdf/robot.urdf.
+      - name: Check committed xacro matches robot.urdf and is valid
+        run: |
+          if ! grep -q "<robot" urdf/robot.urdf; then
+            echo "urdf/robot.urdf is still the template placeholder; skipping."
+            exit 0
+          fi
+          python scripts/urdf_to_xacro.py urdf/robot.urdf
+          git add --intent-to-add urdf
+          git diff --exit-code urdf || {
+            echo "::error::urdf/*.xacro is out of date; re-run scripts/urdf_to_xacro.py (or the Update URDF workflow)."
+            exit 1
+          }
+          for prefix in "" "r1_"; do
+            xacro urdf/robot.urdf.xacro tf_prefix:="$prefix" > /tmp/robot_$prefix.urdf
+            check_urdf /tmp/robot_$prefix.urdf
+          done

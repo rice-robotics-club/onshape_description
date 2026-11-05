@@ -1,16 +1,25 @@
-from ament_index_python.packages import get_package_share_path
-
-from launch import LaunchDescription
-from launch.substitutions import Command
-
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
+from launch_ros.substitutions import FindPackageShare
+
+from launch import LaunchDescription
 
 
 def generate_launch_description():
-    description_path = get_package_share_path("onshape_description")
+    description_path = FindPackageShare("onshape_description")
 
-    robot_description_content = Command(["cat ", str(description_path / "urdf" / "robot.urdf")])
+    tf_prefix = LaunchConfiguration("tf_prefix")
+    robot_description_content = Command(
+        [
+            "xacro ",
+            PathJoinSubstitution([description_path, "urdf", "robot.urdf.xacro"]),
+            " tf_prefix:='",
+            tf_prefix,
+            "'",
+        ]
+    )
 
     robot_state_publisher_node = Node(
         package="robot_state_publisher",
@@ -18,7 +27,9 @@ def generate_launch_description():
         output="both",
         parameters=[
             {
-                "robot_description": ParameterValue(robot_description_content, value_type=str)
+                "robot_description": ParameterValue(
+                    robot_description_content, value_type=str
+                )
             }
         ],
     )
@@ -38,6 +49,11 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            DeclareLaunchArgument(
+                "tf_prefix",
+                default_value="",
+                description="Prefix for all link and joint names (e.g. 'left_').",
+            ),
             robot_state_publisher_node,
             rviz_node,
             joint_state_publisher_gui_node,

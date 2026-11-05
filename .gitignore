@@ -1,0 +1,3 @@
+robot.pkl
+__pycache__/
+.pytest_cache/
